@@ -1,74 +1,116 @@
-import React, { useState, useEffect } from "react";
-import { useHistory, useParams, Link } from "react-router-dom";
-import { readDeck, readCard, updateCard } from "../utils/api/index";
+import { React, useState, useEffect, useRef } from "react";
+import { Link, useParams, useHistory } from "react-router-dom";
+import { readCard, readDeck, updateCard } from "../utils/api";
 import CardForm from "./CardForm";
 
-function EditCard() {
-  const [deck, setDeck] = useState({});
-  const [card, setCard] = useState({});
-  const { deckId, cardId } = useParams();
+
+export default function EditCard() {
+  const { cardId, deckId } = useParams();
   const history = useHistory();
+  const initialState = {
+    id: "",
+    front: "",
+    back: "",
+    deckId: "",
+  };
+  const mountedRef = useRef(false);
+  const [card, setCard] = useState(initialState);
+  const [deck, setDeck] = useState({ name: "", description: "", id: "" });
 
-  //pulls correct deck order to add cards
+
+  //track state
   useEffect(() => {
-    const abortController = new AbortController();
-
-    async function loadDeckAndCards() {
-      try {
-        const deckData = await readDeck(deckId, abortController.signal);
-        const cardData = await readCard(cardId, abortController.signal);
-        setDeck(deckData);
-        setCard(cardData);
-//         setFront(cardData.front);
-//         setBack(cardData.back);
-      }
-      catch (error) {
-        console.log("error creating deck list");
-      }
-      return () => {
-        abortController.abort();
-      }
-    }  
-    loadDeckAndCards();
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
-  //when form saved, card will be added to deck and user can add new cards
-  
-  const submitHandler = async (e) => {
-    e.preventDefault();
-      const abortController = new AbortController();
-      await updateCard(card, abortController.signal);
-      history.push(`/decks/${deckId}`);
-};
-  
-  const onChangeHandler = (e) => {
-    setCard({
-    ...card,
-    [e.target.name]: e.target.value,
-    });
-};
+
+  //get decks from api
+  useEffect(() => {
+    const abortController = new AbortController();
+    async function loadDeck() {
+      try {
+        const loadedDeck = await readDeck(deckId, abortController.signal);
+        if (mountedRef.current) {
+          setDeck(() => loadedDeck);
+        }
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          throw error;
+        }
+      }
+    }
+    loadDeck();
+    return () => {
+      abortController.abort();
+    };
+  }, [deckId]); //renders each time card Id changes
+
+
+  //get cards from api
+  useEffect(() => {
+    const abortController = new AbortController();
+    async function loadCard() {
+      try {
+        const loadedCard = await readCard(cardId, abortController.signal);
+        if (mountedRef.current) {
+          setCard(() => loadedCard);
+        }
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          throw error;
+        }
+      }
+    }
+    loadCard();
+    return () => {
+      abortController.abort();
+    };
+  }, [cardId]); //renders each time card Id changes
+
+
+  const changeHandler = ({ target }) => {
+    setCard((currentState) => ({
+      ...currentState,
+      [target.name]: target.value,
+    }));
+  };
+
+
+  const submitHandler = async (event) => {
+    event.preventDefault();
+    await updateCard(card);
+    setCard(initialState);
+    history.push(`/decks/${deckId}`);
+  };
+
 
   return (
     <div>
       <nav aria-label="breadcrumb">
         <ol className="breadcrumb">
-          <li className="breadcrumb-item"><Link to="/">Home</Link></li>
-          <li className="breadcrumb-item"><Link to={`/decks/${deckId}`}>{deck.name}</Link></li>
-          <li className="breadcrumb-item active" aria-current="page">Edit Card {cardId}</li>
+          <li className="breadcrumb-item">
+            <Link to="/">Home</Link>
+          </li>
+          <li className="breadcrumb-item">
+            <Link to={`decks/${deckId}`}>{deck.name}</Link>
+          </li>
+          <li className="breadcrumb-item active" aria-current="page">
+            Edit Card {card.id}
+          </li>
         </ol>
       </nav>
-      <h1>EditCard</h1>
-      <div className="card-info">
-        <CardForm 
-          front={card.front}
-          back={card.back}
-          deck={deck}
-          handleSubmit={submitHandler}
-          handleChange = {onChangeHandler}
-          />
+      <div>
+        <h1>Edit Card</h1>
+        <CardForm
+          changeHandler={changeHandler}
+          submitHandler={submitHandler}
+          card={card}
+          deckId={deckId}
+        />
       </div>
     </div>
-  )
+  );
 }
-
-export default EditCard;
