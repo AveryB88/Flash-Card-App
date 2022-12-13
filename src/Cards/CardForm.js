@@ -1,42 +1,43 @@
 import React from "react";
-import { useHistory, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 
-function CardForm({ onChangeBackHandler, onChangeFrontHandler, submitHandler, front, back }) {
-  const history = useHistory();
-  const { deckId } = useParams;
-  
+export default function CardForm({ deckId, changeHandler, submitHandler, card }) {
   return (
-    <div>
-      <h1>CardForm</h1>
-      
-      <form onSubmit={submitHandler}>
-        <div className="form-group">
-          <label htmlFor="front">Front</label>
-          <textarea 
-          type="text" 
-          className="form-control" 
-          id="front" 
-          placeholder="Front side of the card"
-          onChange={onChangeFrontHandler}
-          value={front}
-          ></textarea>
-        </div>
-        <div class="form-group">
-          <label for="back">Back</label>
-          <textarea 
-          type="text" 
-          className="form-control" 
-          id="back" 
-          placeholder="Back side of the card"
-          onChange={onChangeBackHandler}
-          value={back}
-          ></textarea>
-        </div>
-      </form>
-      <button type="button" className="btn btn-secondary mx-1" onClick={() => history.push(`/decks/${deckId}`)}>Done</button>
-      <button type="submit" className="btn btn-primary">Save</button>
-    </div>
-  )
+    <form onSubmit={submitHandler}>
+      <div className="form-group">
+        <label htmlFor="Front">Front</label>
+        <textarea
+          type="textarea"
+          name="front"
+          id="front"
+          className="form-control"
+          rows="5"
+          placeholder="Front side of card"
+          onChange={changeHandler}
+          value={card.front}
+        />
+      </div>
+      <div>
+        <label htmlFor="Back">Back</label>
+        <textarea
+          type="textarea"
+          name="back"
+          id="back"
+          className="form-control"
+          rows="5"
+          placeholder="Back side of card"
+          onChange={changeHandler}
+          value={card.back}
+        />
+      </div>
+      <div>
+        <Link to={`/decks/${deckId}`} className="btn btn-secondary mr-2 mt-2">
+          Done
+        </Link>
+        <button className="btn btn-primary mt-2" type="submit">
+          Save
+        </button>
+      </div>
+    </form>
+  );
 }
-
-export default CardForm;
