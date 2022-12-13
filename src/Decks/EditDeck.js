@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { useHistory, Link, useParams } from "react-router-dom";
-import { readDeck } from "../utils/api";
-import { updateDeck } from "../utils/api/index";
-
+import { React, useState, useEffect } from "react";
+import { Link, useParams, useHistory } from "react-router-dom";
+import { readDeck, updateDeck } from "../utils/api/index";
 
 
 export default function EditDeck() {
@@ -53,7 +51,7 @@ export default function EditDeck() {
 
 
   return (
-    <div>
+    <>
       <nav aria-label="breadcrumb">
         <ol className="breadcrumb">
           <li className="breadcrumb-item">
@@ -104,6 +102,6 @@ export default function EditDeck() {
           </div>
         </form>
       </div>
-    </div>
+    </>
   );
 }
