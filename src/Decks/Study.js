@@ -71,7 +71,7 @@ if (deck && deck.id && cards.length < 3) {
   return (
     <div className="container">
       <p className="text-center">
-        lodaing ...
+        loading ...
       </p>
     </div>
   )
