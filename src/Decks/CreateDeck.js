@@ -1,79 +1,20 @@
-import { React, useState, useEffect, useRef } from "react";
-import { Link, useParams, useHistory } from "react-router-dom";
-import { readCard, readDeck, updateCard } from "../utils/api";
-import CardForm from "./CardForm";
+import { React, useState } from "react";
+import { Link, useHistory } from "react-router-dom";
+import { createDeck } from "../utils/api/index";
 
-
-export default function EditCard() {
-  const { cardId, deckId } = useParams();
-  const history = useHistory();
-  const initialState = {
-    id: "",
-    front: "",
-    back: "",
-    deckId: "",
+export default function CreateDeck() {
+  const initialForm = {
+    name: "",
+    description: "",
   };
-  const mountedRef = useRef(false);
-  const [card, setCard] = useState(initialState);
-  const [deck, setDeck] = useState({ name: "", description: "", id: "" });
+  const [formData, setFormData] = useState(initialForm);
+  const history = useHistory();
 
 
-  //track state
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-
-  //get decks from api
-  useEffect(() => {
-    const abortController = new AbortController();
-    async function loadDeck() {
-      try {
-        const loadedDeck = await readDeck(deckId, abortController.signal);
-        if (mountedRef.current) {
-          setDeck(() => loadedDeck);
-        }
-      } catch (error) {
-        if (error.name !== "AbortError") {
-          throw error;
-        }
-      }
-    }
-    loadDeck();
-    return () => {
-      abortController.abort();
-    };
-  }, [deckId]); //renders each time card Id changes
-
-
-  //get cards from api
-  useEffect(() => {
-    const abortController = new AbortController();
-    async function loadCard() {
-      try {
-        const loadedCard = await readCard(cardId, abortController.signal);
-        if (mountedRef.current) {
-          setCard(() => loadedCard);
-        }
-      } catch (error) {
-        if (error.name !== "AbortError") {
-          throw error;
-        }
-      }
-    }
-    loadCard();
-    return () => {
-      abortController.abort();
-    };
-  }, [cardId]); //renders each time card Id changes
-
-
+  //updates form when changed
   const changeHandler = ({ target }) => {
-    setCard((currentState) => ({
-      ...currentState,
+    setFormData((currentData) => ({
+      ...currentData,
       [target.name]: target.value,
     }));
   };
@@ -81,12 +22,13 @@ export default function EditCard() {
 
   const submitHandler = async (event) => {
     event.preventDefault();
-    await updateCard(card);
-    setCard(initialState);
-    history.push(`/decks/${deckId}`);
+    await createDeck(formData); //calls data from api
+    setFormData({ ...initialForm }); //clears form
+    history.push("/");
   };
 
 
+  //form
   return (
     <div>
       <nav aria-label="breadcrumb">
@@ -94,22 +36,51 @@ export default function EditCard() {
           <li className="breadcrumb-item">
             <Link to="/">Home</Link>
           </li>
-          <li className="breadcrumb-item">
-            <Link to={`decks/${deckId}`}>{deck.name}</Link>
-          </li>
           <li className="breadcrumb-item active" aria-current="page">
-            Edit Card {card.id}
+            Create Deck
           </li>
         </ol>
       </nav>
       <div>
-        <h1>Edit Card</h1>
-        <CardForm
-          changeHandler={changeHandler}
-          submitHandler={submitHandler}
-          card={card}
-          deckId={deckId}
-        />
+        <form onSubmit={submitHandler}>
+          <h1 className="my-4">Create Deck</h1>
+          <div className="form-group">
+            <label htmlFor="name">Name</label>
+
+
+            <input
+              type="text"
+              name="name"
+              id="name"
+              className="form-control form-control-md"
+              placeholder="Deck Name"
+              onChange={changeHandler}
+              value={formData.name}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="description">Description</label>
+            <textarea
+              type="textarea"
+              name="description"
+              id="description"
+              className="form-control"
+              rows="5"
+              placeholder="Breif description of the deck"
+              onChange={changeHandler}
+              value={formData.description}
+            />
+          </div>
+          <Link to="/" className="mr-2">
+            <button
+              className="btn btn-secondary"
+              onClick={() => history.push("/")}
+            >
+              Cancel
+            </button>
+          </Link>
+          <button className="btn btn-primary" type="submit">Submit</button>
+        </form>
       </div>
     </div>
   );
