@@ -15,7 +15,7 @@ function Layout() {
     <div>
       <Header />
       <div htmlFor="Layout" className="container">
-        {/* TODO: Implement the screen starting here */}
+        /* TODO: Implement the screen starting here */
         <Switch>
           <Route exact path="/">
             <Home />
